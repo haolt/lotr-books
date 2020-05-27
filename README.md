@@ -1,68 +1,67 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Concept
+> Recoil creates a data-flow graph that flows from atoms (shared state) through selectors (pure functions) & down into React components.
 
-## Available Scripts
+### Atom
+#### Define
+Atom represents a piece of state that is **updateable & subscribable**.
+*When an atom is updated, each subscribed component is re-rendered with the new value.*
 
-In the project directory, you can run:
+#### Syntax
+Atoms are created via `atom()`:
+##### Init
+```js
+const starState = atom({
+  key: 'starState', // GLOBALLY unique
+  default: 30,
+})
+```
+##### Read AND edit an atom
+```js
+function StarButton() {
+  const [stars, setStars] = useRecoilState(starState);
+  return (
+    <button onClick={() => setStars(stars => stars + 1)}> {{ stars }} </button>
+  );
+}
+```
+- Components that read the value of an atom are **IMPLICITLY subscribed** to that atom *(so any atom updates will result in a re-render of all components subscribed to that atom).*
 
-### `yarn start`
+### Selectors
+#### Define
+A selector is a `PURE function` that accepts 
+A selector represents a piece of **derived state** *(transformation of state)*.
+Derived state as the output of passing state to a `PURE function` that modifies the given state *(besides `atom`, input can be `other selectors`.)*
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- *When the upstream atoms or selectors are updated, `selector()` will be re-evaluated.*
+- *When the selectors change, components subscribing to selectors will be re-rendered (atom as well).*
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
+#### Syntax
+##### Init
+```js
+const starLabelState = selector({
+  key: 'starLabelState',
+  get: ({get}) => {
+    const stars = get(starState);
+    return `${stars} px`;
+  },
+});
+```
+- The `get` property is the function that is to be computed. Via `get` argument passed to it, the value of atoms and other selectors  can be accessed.
+- Whenever it accesses another atom or selector, a dependency relationship is created such that updating the other atom or selector will cause this one to be recomputed.
 
-### `yarn test`
+##### Read
+```js
+function StarButton() {
+  const starLabelState = useRecoilValue(starLabelState);
+  return (<span>Current font size: ${ starLabelState }</span>);
+}
+```
+**Notes:**:
+- In this case, NOT use `useRecoilState()` because it is a **certain hooks** that `ONLY` work with `writable state`.
++ All atoms are writable state
+BUT
++ Some selectors are considered writable state (selectors that have both a `get` and `set` property)
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Common API
+`useRecoilState()`*(a getter function)*, `useSetRecoilState()` *(a setter function)*, `useRecoilValue()`
 
-### `yarn build`
-
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `yarn eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
-
-### Analyzing the Bundle Size
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
-
-### Making a Progressive Web App
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
-
-### Advanced Configuration
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
-
-### Deployment
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
-
-### `yarn build` fails to minify
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
